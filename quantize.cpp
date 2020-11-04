@@ -3,6 +3,13 @@
 
 #include "pch.h"
 
+int init_numpy() {
+	import_array(); // PyError if not successful
+	return 0;
+}
+
+const static int numpy_initialized = init_numpy();
+
 // ----------------------------------------
 //               定义初始化
 // ----------------------------------------
@@ -84,45 +91,54 @@ static PyObject* Quant_Stochastic_Quantize(Quant* self, PyObject* pArgs) {
 	Py_INCREF(Py_None);
 
 	PyObject* py_float_array;
+	int data_struct_len = 4;
+
+	// 获取PythonObject
 	PyArg_ParseTuple(pArgs, "O", &py_float_array);
-	if (!PySequence_Check(py_float_array)) {
-		PyErr_SetString(PyExc_TypeError, "List of float were required.");
+	// 检查ndarray类型
+	if (!PyArray_Check(py_float_array)) {
+		PyErr_SetString(PyExc_TypeError, "ndarray were required.");
 		return res;
 	}
-	py_float_array = PySequence_Fast(py_float_array, "Iterable object is required.");
-
-	PyObject* item;
-
-	int len = PySequence_Fast_GET_SIZE(py_float_array);
-
-	/* ----------- 内存分配 ----------- */
-
-	double* double_array = new double[len];
-	char* byte_result = new char[len] {0};
-
-	/* ----------- 内存分配 ----------- */
-
-	for (int i = 0; i < len; ++i) {
-		item = PySequence_Fast_GET_ITEM(py_float_array, i);
-
-		if (!PyArg_Parse(item, "d", double_array + i)) {
-			PyErr_SetString(PyExc_TypeError, "Space must be float type.");
-			return res;
-		}
+	// 检查数据长度
+	if (PyArray_TYPE(py_float_array) == NPY_DOUBLE) {
+		data_struct_len = 8;
 	}
+	else {
+		PyErr_SetString(PyExc_TypeError, "dtype must be float64");
+		return res;
+	}
+
+	// 检查维度
+	int dims = PyArray_NDIM(py_float_array);
+	if (dims != 1) {
+		PyErr_SetString(PyExc_TypeError, "Can only accept 1-dimision array.");
+		return res;
+	}
+
+	// 获取元素数目
+	npy_intp array_len = PyArray_Size(py_float_array);
+
+	// 获取buffer
+	const double* input_buffer = reinterpret_cast<double*>(PyArray_DATA(py_float_array));
+
+	/* ----------- 内存分配 ----------- */
+
+	char* byte_result = new char[array_len] {0};
+
+	/* ----------- 内存分配 ----------- */
 
 	Py_BEGIN_ALLOW_THREADS
 	// 执行核心操作
-	self->core_instance->stochastic_quantize(double_array, len, byte_result);
+	self->core_instance->stochastic_quantize(input_buffer, array_len, byte_result);
 	Py_END_ALLOW_THREADS
 
-	res = Py_BuildValue("y#", byte_result, len);
+	res = Py_BuildValue("y#", byte_result, array_len);
 
 	/* ----------- 内存释放 ----------- */
 
-	delete[] double_array;
 	delete[] byte_result;
-	Py_DECREF(py_float_array);
+	//Py_DECREF(py_float_array);
 
 	/* ----------- 内存释放 ----------- */
 
@@ -198,7 +214,6 @@ static PyObject* Quant_Decode(Quant* self, PyObject* pArgs) {
 
 	/* ----------- 内存分配 ----------- */
 
-	Py_BEGIN_ALLOW_THREADS
 	try {
 		self->core_instance->decode_quantized_array(byte_buffer, len, double_array);
 	}
@@ -206,21 +221,13 @@ static PyObject* Quant_Decode(Quant* self, PyObject* pArgs) {
 		PyErr_SetString(PyExc_TypeError, "Unexpected input value.");
 		return res;
 	}
-	Py_END_ALLOW_THREADS
 
-	PyObject* tmp_item;
-	// 分配GC对象
-	res = PyList_New(len);
-	// 写入托管空间
-	for (int i = 0; i < len; ++i) {
-		tmp_item = Py_BuildValue("d", double_array[i]);
-		// 写入
-		PyList_SetItem(res, i, tmp_item);
-	}
+	// 写入ndarray
+	res = PyArray_SimpleNewFromData(1, &len, NPY_DOUBLE, double_array);
 
 	/* ----------- 内存释放 ----------- */
 
-	delete[] double_array;
+	// delete[] double_array;
 
 	/* ----------- 内存释放 ----------- */
 

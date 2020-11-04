@@ -83,8 +83,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\ZZADD\AppData\Local\Programs\Python\Python37\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\ZZADD\AppData\Local\Programs\Python\Python37\libs;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\ZZADD\AppData\Local\Programs\Python\Python37\Lib\site-packages\numpy\core\include;C:\Users\ZZADD\AppData\Local\Programs\Python\Python37\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\ZZADD\AppData\Local\Programs\Python\Python37\Lib\site-packages\numpy\core\lib;C:\Users\ZZADD\AppData\Local\Programs\Python\Python37\libs;$(LibraryPath)</LibraryPath>
     <TargetExt>.pyd</TargetExt>
     <OutDir>C:\Users\ZZADD\Source\Repos\ParallelSGDClient\utils\</OutDir>
   </PropertyGroup>
