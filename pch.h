@@ -14,7 +14,6 @@
 #include <numpy/arrayobject.h>
 #include <numpy/ndarraytypes.h>
 
-#include <random>
 
 #include "quant.h"
 

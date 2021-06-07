@@ -1,4 +1,7 @@
-#include "pch.h"
+#include "quant.h"
+
+#include <random>
+
 
 static inline int find_lower(double target, double* q_space, int len) {
 	for (int i = len - 1; i >= 0; --i) {

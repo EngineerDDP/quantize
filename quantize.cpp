@@ -224,10 +224,13 @@ static PyObject* Quant_Decode(Quant* self, PyObject* pArgs) {
 
 	// 写入ndarray
 	res = PyArray_SimpleNewFromData(1, &len, NPY_DOUBLE, double_array);
+	// 托管内存
+	PyArray_ENABLEFLAGS(reinterpret_cast<PyArrayObject*>(res), NPY_OWNDATA);
 
 	/* ----------- 内存释放 ----------- */
 
 	// delete[] double_array;
+	// Py_DECREF(res);
 
 	/* ----------- 内存释放 ----------- */
 
